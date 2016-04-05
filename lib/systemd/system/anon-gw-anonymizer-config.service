@@ -1,0 +1,33 @@
+## This file is part of Whonix.
+## See the file COPYING for copying conditions.
+## Modified for Whonix.
+
+[Unit]
+Description=
+After=livesys.service plymouth-quit-wait.service
+After=systemd-vconsole-setup.service
+Before=display-manager.service getty@tty1.service getty@ttyUSB0.service
+Before=serial-getty@ttyS0.service serial-getty@ttyO0.service serial-getty@ttyO2.service
+Before=serial-getty@ttyAMA0.service serial-getty@ttymxc0.service serial-getty@ttymxc3.service
+Before=sdwdate.service
+Before=whonixcheck.service
+Before=rads.service
+Before=control-port-filter-python.service
+
+## Better look and feel.
+Before=tor.service
+After=swap-file-creator.service
+After=whonix-initializer.service
+
+ConditionKernelCommandLine=!rd.live.image
+
+[Service]
+Type=oneshot
+ExecStart=/usr/lib/anon-gw-anonymizer-config/startup
+TimeoutSec=0
+RemainAfterExit=yes
+SysVStartPriority=99
+StandardOutput=tty
+
+[Install]
+WantedBy=multi-user.target
