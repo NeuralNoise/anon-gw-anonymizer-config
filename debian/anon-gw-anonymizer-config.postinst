@@ -4,6 +4,11 @@
 ## Copyright (C) 2012 - 2014 Patrick Schleizer <adrelanos@riseup.net>
 ## See the file COPYING for copying conditions.
 
+## Debugging.
+## TODO: remove
+set -x
+env
+
 if [ -f /usr/lib/pre.bsh ]; then
    source /usr/lib/pre.bsh
 fi
@@ -16,28 +21,101 @@ true "
 #####################################################################
 "
 
+first_install() {
+   if [ -e /var/lib/anon-gw-anonymizer-config/first_install.done ]; then
+      return 0
+   fi
+
+
+   cd /var/lib/anon-gw-anonymizer-config/initial-packages
+
+   mkdir --parents /var/lib/anon-gw-anonymizer-config/initial-packages
+   mkdir --parents /var/cache/anon-gw-anonymizer-config/apt-get
+   mkdir --parents /var/cache/anon-gw-anonymizer-config/apt-get/var/lib/apt/lists/partial
+   mkdir --parents /var/cache/anon-gw-anonymizer-config/apt-get/var/cache/apt/archives/partial
+   mkdir --parents /var/cache/anon-gw-anonymizer-config/dpkg
+
+   cp /var/lib/dpkg/status /var/cache/anon-gw-anonymizer-config/dpkg/status
+
+   [ -n "$EMPTY_DIR" ] || EMPTY_DIR="$(mktemp --directory)"
+
+   mkdir --parents "$EMPTY_DIR"
+
+   ## Debugging.
+   true "UWT_DEV_PASSTHROUGH: $UWT_DEV_PASSTHROUGH"
+
+   ## Debugging.
+   export UWT_VERBOSE=1
+   true "UWT_VERBOSE: UWT_VERBOSE"
+
+   ## Debugging.
+   ## Override with || true in case not installed.
+   ## This is the case when --no-default-applications is being used.
+   which torsocks || true
+   which uwt || true
+
+   ## TODO
+   if [ "$apt_get_update_wrapper" = "" ]; then
+      apt_get_update_wrapper="apt-get"
+   fi
+
+   ## TODO /etc/apt/sources.list.d/torproject.list
+
+   test -f /etc/apt/sources.list.d/torproject.list
+
+   $apt_get_update_wrapper \
+      $apt_get_gpgv_opts \
+      $apt_timeout_opts \
+      $apt_misc_opts \
+      -o Dir="/var/cache/anon-gw-anonymizer-config/apt-get" \
+      -o Dir::State::status="/var/cache/anon-gw-anonymizer-config/dpkg/status" \
+      -o Dir::Etc="/etc/apt/" \
+      -o Dir::Etc::sourcelist="/etc/apt/sources.list.d/torproject.list" \
+      -o Dir::Etc::sourceparts="$EMPTY_DIR" \
+      update
+
+   ## Installing deb.torproject.org-keyring Debian package, which helps to keep Torprojects signing key current.
+
+   apt-get \
+      $apt_timeout_opts \
+      $apt_misc_opts \
+      --yes \
+      -o Dir="/var/cache/anon-gw-anonymizer-config/apt-get" \
+      -o Dir::State::status="/var/cache/anon-gw-anonymizer-config/dpkg/status" \
+      -o Dir::Etc="/etc/apt/" \
+      -o Dir::Etc::sourcelist="/etc/apt/sources.list.d/torproject.list" \
+      -o Dir::Etc::sourceparts="$EMPTY_DIR" \
+      download deb.torproject.org-keyring tor tor-geoipdb
+
+   mkdir --parents /var/lib/anon-gw-anonymizer-config
+   touch /var/lib/anon-gw-anonymizer-config/first_install.done
+}
+
+configure_function() {
+   addgroup --quiet debian-tor 2>/dev/null || true
+
+   ## Add user "user" to the group "debian-tor", so user "user" can access Tor's control port.
+   ## User "user" already exists thanks to the anon-base-files package.
+   addgroup --quiet user debian-tor
+
+   ## force-reload Tor, if running.
+   service_tor_status_exit_code="0"
+   service tor@default status >/dev/null 2>&1 || { service_tor_status_exit_code="$?" ; true; };
+   if [ "$service_tor_status_exit_code" = "0" ]; then
+      ## || true to avoid an error in case Tor's init script has been
+      ## chmodded -x in meanwhile or in case the original config is erroneous.
+      service tor@default force-reload || true
+   fi
+}
+
+
+
 case "$1" in
    configure)
       true "INFO: Configuring $DPKG_MAINTSCRIPT_PACKAGE..."
 
-      ## 70_tor {{
-
-      addgroup --quiet debian-tor 2>/dev/null || true
-
-      ## Add user "user" to the group "debian-tor", so user "user" can access Tor's control port.
-      ## User "user" already exists thanks to the anon-base-files package.
-      addgroup --quiet user debian-tor
-
-      ## 70_tor }}
-
-      ## force-reload Tor, if running.
-      service_tor_status_exit_code="0"
-      service tor@default status >/dev/null 2>&1 || { service_tor_status_exit_code="$?" ; true; };
-      if [ "$service_tor_status_exit_code" = "0" ]; then
-         ## || true to avoid an error in case Tor's init script has been
-         ## chmodded -x in meanwhile or in case the original config is erroneous.
-         service tor@default force-reload || true
-      fi
+      first_install
+      configure_function
 
       true "INFO: End configuring $DPKG_MAINTSCRIPT_PACKAGE."
 
