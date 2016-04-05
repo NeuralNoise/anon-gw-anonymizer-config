@@ -42,7 +42,7 @@ first_install() {
    ## apt-get refuses to work without a valid dpkg status file.
    cp /var/lib/dpkg/status /var/cache/anon-gw-anonymizer-config/dpkg/status
 
-   ## Change directory into the oflder where downloaded packages should be stored.
+   ## Change directory into the folder where downloaded packages should be stored.
    pushd /var/lib/anon-gw-anonymizer-config/initial-packages >/dev/null
 
    [ -n "$EMPTY_DIR" ] || EMPTY_DIR="$(mktemp --directory)"
