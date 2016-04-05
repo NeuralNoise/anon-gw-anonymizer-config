@@ -26,16 +26,24 @@ first_install() {
       return 0
    fi
 
+   folder_list=(
+      /var/lib/anon-gw-anonymizer-config/initial-packages
+      /var/cache/anon-gw-anonymizer-config/apt-get
+      /var/cache/anon-gw-anonymizer-config/apt-get/var/lib/apt/lists/partial
+      /var/cache/anon-gw-anonymizer-config/apt-get/var/cache/apt/archives/partial
+      /var/cache/anon-gw-anonymizer-config/dpkg
+   )
 
-   cd /var/lib/anon-gw-anonymizer-config/initial-packages
+   for folder in $folder_list ; do
+      rm -rf "$folder"
+      mkdir --parents "$folder"
+   done
 
-   mkdir --parents /var/lib/anon-gw-anonymizer-config/initial-packages
-   mkdir --parents /var/cache/anon-gw-anonymizer-config/apt-get
-   mkdir --parents /var/cache/anon-gw-anonymizer-config/apt-get/var/lib/apt/lists/partial
-   mkdir --parents /var/cache/anon-gw-anonymizer-config/apt-get/var/cache/apt/archives/partial
-   mkdir --parents /var/cache/anon-gw-anonymizer-config/dpkg
-
+   ## apt-get refuses to work without a valid dpkg status file.
    cp /var/lib/dpkg/status /var/cache/anon-gw-anonymizer-config/dpkg/status
+
+   ## Change directory into the oflder where downloaded packages should be stored.
+   pushd /var/lib/anon-gw-anonymizer-config/initial-packages >/dev/null
 
    [ -n "$EMPTY_DIR" ] || EMPTY_DIR="$(mktemp --directory)"
 
@@ -59,10 +67,8 @@ first_install() {
       apt_get_update_wrapper="apt-get"
    fi
 
-   ## TODO /etc/apt/sources.list.d/torproject.list
-
-   test -f /etc/apt/sources.list.d/torproject.list
-
+   ## If file /etc/apt/sources.list.d/torproject.list did not exist, apt-apt
+   ## would fail open and exit 0.
    $apt_get_update_wrapper \
       $apt_get_gpgv_opts \
       $apt_timeout_opts \
@@ -74,8 +80,8 @@ first_install() {
       -o Dir::Etc::sourceparts="$EMPTY_DIR" \
       update
 
-   ## Installing deb.torproject.org-keyring Debian package, which helps to keep Torprojects signing key current.
-
+   ## Downloading deb.torproject.org-keyring Debian package, which helps to keep Torprojects signing key current.
+   ## Also downloading tor tor-geoipdb from The Tor Projects repository.
    apt-get \
       $apt_timeout_opts \
       $apt_misc_opts \
