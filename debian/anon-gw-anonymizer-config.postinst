@@ -22,6 +22,9 @@ true "
 "
 
 first_install() {
+   if [ -e /var/lib/anon-gw-anonymizer-config/first_install.skip ]; then
+      return 0
+   fi
    if [ -e /var/lib/anon-gw-anonymizer-config/first_install.done ]; then
       return 0
    fi
