@@ -26,7 +26,6 @@ Type=oneshot
 ExecStart=/usr/lib/anon-gw-anonymizer-config/startup
 TimeoutSec=0
 RemainAfterExit=yes
-SysVStartPriority=99
 
 [Install]
 WantedBy=multi-user.target
