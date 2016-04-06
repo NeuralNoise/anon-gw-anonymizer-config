@@ -26,13 +26,13 @@ first_install() {
       return 0
    fi
 
-   folder_list=(
+   folder_list="
       /var/lib/anon-gw-anonymizer-config/initial-packages
       /var/cache/anon-gw-anonymizer-config/apt-get
       /var/cache/anon-gw-anonymizer-config/apt-get/var/lib/apt/lists/partial
       /var/cache/anon-gw-anonymizer-config/apt-get/var/cache/apt/archives/partial
       /var/cache/anon-gw-anonymizer-config/dpkg
-   )
+   "
 
    for folder in $folder_list ; do
       rm -rf "$folder"
