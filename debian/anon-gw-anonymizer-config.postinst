@@ -52,6 +52,7 @@ first_install() {
    ## Debugging.
    true "UWT_DEV_PASSTHROUGH: $UWT_DEV_PASSTHROUGH"
 
+   ## TODO
    ## Debugging.
    export UWT_VERBOSE=1
    true "UWT_VERBOSE: UWT_VERBOSE"

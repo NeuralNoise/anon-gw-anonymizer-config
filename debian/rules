@@ -9,6 +9,11 @@
 %:
 	dh $@ --with=config-package --with systemd
 
+## When installing this package from the repository...
+## The systemd service would install the 'tor' package which has been
+## downloaded from 'deb.torproject.org' using dpkg. Since dpkg is already
+## running, we cannot start another instance of dpkg as the database is
+## already locked.
 override_dh_systemd_start:
 	dh_systemd_start --no-start
 

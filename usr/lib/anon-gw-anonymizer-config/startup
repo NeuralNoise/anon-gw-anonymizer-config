@@ -7,29 +7,27 @@
 set -x
 set -e
 
-if [ "$(ls -A "/var/lib/anon-gw-anonymizer-config/initial-packages/")" ]; then
-   true
-else
-   exit 0
+## Prevents daemons from starting (the Tor daemon).
+## Since this script gets started by systemd, another instance of systemd
+## (started by the 'tor' package's Debian maintainer postinst script) would
+## block forever.
+
+delete=true
+if [ -e /usr/sbin/policy-rc.d ]; then
+   delete=false
 fi
 
-source /usr/lib/anon-shared-helper-scripts/pkg_manager_running_check
+echo "exit 101" >> /usr/sbin/policy-rc.d
+chmod +x /usr/sbin/policy-rc.d
 
-check_package_manager_running() {
-   check_package_manager_running_helper
+/usr/lib/anon-gw-anonymizer-config/startup_helper &
+pid="$!"
+exit_code="0"
+wait "$pid" || exit_code="$?"
 
-   if [ "$check_apt_get_exit_code" = "0" ]; then
-      local MSG="<p>Check Package Manager Running Result: None running, ok.</p>"
-      return 0
-   fi
+if [ "$delete" = "true" ]; then
+   ## Allow startup of daemons again.
+   rm -f /usr/sbin/policy-rc.d
+fi
 
-   sleep "1" &
-   wait "$!" || true
-   check_package_manager_running
-}
-
-check_package_manager_running
-
-dpkg --install "/var/lib/anon-gw-anonymizer-config/initial-packages/"*".deb"
-
-true $?
+exit "$exit_code"
