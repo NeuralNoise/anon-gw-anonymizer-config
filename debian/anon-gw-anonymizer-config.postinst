@@ -29,6 +29,10 @@ postinst_install_first() {
       return 0
    fi
 
+   ## provides:
+   ## apt_get_during_apt_get_download
+   source /usr/lib/apt-during-apt/apt-during-apt.bsh
+
    apt_get_during_apt_get_download "/etc/apt/sources.list.d/torproject.list" "tor tor-geoipdb"
 
    mkdir --parents /var/lib/anon-gw-anonymizer-config
