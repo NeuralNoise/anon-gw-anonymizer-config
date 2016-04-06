@@ -42,6 +42,7 @@ first_install_postinst() {
       mkdir --parents "$folder"
    done
 
+   ## TODO: fix lintian warning
    ## apt-get refuses to work without a valid dpkg status file.
    cp /var/lib/dpkg/status /var/cache/anon-gw-anonymizer-config/dpkg/status
 
