@@ -21,11 +21,11 @@ true "
 #####################################################################
 "
 
-first_install() {
-   if [ -e /var/lib/anon-gw-anonymizer-config/first_install.skip ]; then
+first_install_postinst() {
+   if [ -e /var/lib/anon-gw-anonymizer-config/first_install_postinst.skip ]; then
       return 0
    fi
-   if [ -e /var/lib/anon-gw-anonymizer-config/first_install.done ]; then
+   if [ -e /var/lib/anon-gw-anonymizer-config/first_install_postinst.done ]; then
       return 0
    fi
 
@@ -98,7 +98,7 @@ first_install() {
       download deb.torproject.org-keyring tor tor-geoipdb
 
    mkdir --parents /var/lib/anon-gw-anonymizer-config
-   touch /var/lib/anon-gw-anonymizer-config/first_install.done
+   touch /var/lib/anon-gw-anonymizer-config/first_install_postinst.done
 }
 
 configure_function() {
@@ -124,7 +124,7 @@ case "$1" in
    configure)
       true "INFO: Configuring $DPKG_MAINTSCRIPT_PACKAGE..."
 
-      first_install
+      first_install_postinst
       configure_function
 
       true "INFO: End configuring $DPKG_MAINTSCRIPT_PACKAGE."

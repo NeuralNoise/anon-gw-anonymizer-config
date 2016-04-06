@@ -7,6 +7,13 @@
 set -x
 set -e
 
+if [ -e /var/lib/anon-gw-anonymizer-config/first_install_extra_debs.skip ]; then
+   return 0
+fi
+if [ -e /var/lib/anon-gw-anonymizer-config/first_install_extra_debs.done ]; then
+   return 0
+fi
+
 ## Prevents daemons from starting (the Tor daemon).
 ## Since this script gets started by systemd, another instance of systemd
 ## (started by the 'tor' package's Debian maintainer postinst script) would
@@ -29,5 +36,8 @@ if [ "$delete" = "true" ]; then
    ## Allow startup of daemons again.
    rm -f /usr/sbin/policy-rc.d
 fi
+
+mkdir --parents /var/lib/anon-gw-anonymizer-config
+touch /var/lib/anon-gw-anonymizer-config/first_install_extra_debs.done
 
 exit "$exit_code"
